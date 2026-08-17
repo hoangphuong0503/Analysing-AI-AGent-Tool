@@ -1,0 +1,151 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Amy — AI File Analysis Agent</title>
+  <link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='%2358a6ff'><path d='M12 2L2 7l10 5 10-5-10-5z'/><path d='M2 17l10 5 10-5'/><path d='M2 12l10 5 10-5'/></svg>" />
+  <link rel="stylesheet" href="/style.css" />
+</head>
+<body>
+  <header class="header">
+    <div class="header-inner">
+      <div class="logo">
+        <svg width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+          <path d="M12 2L2 7l10 5 10-5-10-5z"/><path d="M2 17l10 5 10-5"/><path d="M2 12l10 5 10-5"/>
+        </svg>
+        <span>Amy</span>
+      </div>
+      <span class="header-tag">AI File Analysis</span>
+    </div>
+  </header>
+
+  <main class="main-layout">
+
+    <!-- LEFT PANEL -->
+    <aside class="panel panel-left">
+      <section class="card upload-card">
+        <h2 class="card-title">📁 Upload File</h2>
+        <div class="upload-zone" id="uploadZone">
+          <svg class="upload-icon" width="48" height="48" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round">
+            <path d="M21 15v4a2 2 0 01-2 2H5a2 2 0 01-2-2v-4"/><polyline points="17 8 12 3 7 8"/><line x1="12" y1="3" x2="12" y2="15"/>
+          </svg>
+          <p class="upload-text">Drag & drop your file here</p>
+          <p class="upload-sub">or click to browse</p>
+          <p class="upload-formats">CSV &bull; TXT &bull; XLSX &bull; PBIX</p>
+          <input type="file" id="fileInput" accept=".csv,.txt,.xlsx,.pbix" hidden />
+        </div>
+        <div class="upload-status" id="uploadStatus"></div>
+      </section>
+
+      <section class="card file-list-card" id="fileListCard" style="display:none;">
+        <h2 class="card-title">📂 Files <span id="fileCount"></span></h2>
+        <div class="file-list" id="fileList"></div>
+      </section>
+
+      <section class="card file-info-card" id="fileInfoCard" style="display:none;">
+        <h2 class="card-title">📋 File Overview</h2>
+        <div id="fileInfo"></div>
+      </section>
+    </aside>
+
+    <!-- CENTER PANEL: Tabbed Analysis Dashboard -->
+    <section class="panel panel-center" id="centerPanel" style="display:none;">
+      <!-- Tab Navigation -->
+      <nav class="tab-nav" id="tabNav">
+        <button class="tab-btn active" data-tab="eda">📊 EDA</button>
+        <button class="tab-btn" data-tab="clean">🧹 Clean</button>
+        <button class="tab-btn" data-tab="charts">📈 Charts</button>
+        <button class="tab-btn" data-tab="preview">🔍 Preview</button>
+      </nav>
+
+      <!-- EDA Tab -->
+      <div class="tab-panel active" id="tab-eda">
+        <div class="card" id="edaLoading"><p class="muted-text">Run EDA to see results…</p></div>
+      </div>
+
+      <!-- Clean Tab -->
+      <div class="tab-panel" id="tab-clean">
+        <div class="card" id="cleanLoading"><p class="muted-text">Load cleaning suggestions…</p></div>
+      </div>
+
+      <!-- Charts Tab -->
+      <div class="tab-panel" id="tab-charts">
+        <!-- AI Suggested Charts -->
+        <div class="card" id="chartSuggestionsCard">
+          <div class="card-header">
+            <h2 class="card-title">🤖 AI-Recommended Charts</h2>
+            <button class="btn btn-sm" id="loadChartSuggestionsBtn">✨ Get Suggestions</button>
+          </div>
+          <div class="chart-grid" id="chartSuggestionsGrid">
+            <p class="muted-text">Click "Get Suggestions" to see AI-recommended visualizations.</p>
+          </div>
+        </div>
+        <!-- Custom Chart Builder -->
+        <div class="card">
+          <h2 class="card-title">🛠 Custom Chart</h2>
+          <div class="chart-builder" id="chartBuilder">
+            <div class="builder-row">
+              <label>Type</label>
+              <select id="chartType"><option value="bar">Bar</option><option value="line">Line</option><option value="pie">Pie</option><option value="scatter">Scatter</option><option value="histogram">Histogram</option><option value="box">Box</option><option value="heatmap">Heatmap</option></select>
+            </div>
+            <div class="builder-row">
+              <label>X Column</label><select id="chartXCol"></select>
+            </div>
+            <div class="builder-row">
+              <label>Y Column</label><select id="chartYCol"><option value="">(none)</option></select>
+            </div>
+            <div class="builder-row">
+              <label>Title</label><input type="text" id="chartTitle" placeholder="Chart title…" />
+            </div>
+            <button class="btn" id="drawChartBtn">🎨 Draw Chart</button>
+          </div>
+          <div class="chart-result" id="chartResult"></div>
+        </div>
+      </div>
+
+      <!-- Preview Tab -->
+      <div class="tab-panel" id="tab-preview">
+        <div class="card preview-card">
+          <div class="card-header">
+            <h2 class="card-title">🔍 Data Preview</h2>
+            <button class="btn btn-sm" id="suggestBtn" style="display:none;">✨ Get Analysis Ideas</button>
+          </div>
+          <div class="preview-content" id="previewContent"></div>
+          <div class="suggestions-content" id="suggestionsContent" style="margin-top:16px;"></div>
+        </div>
+      </div>
+    </section>
+
+    <!-- RIGHT PANEL: Chat -->
+    <aside class="panel panel-right">
+      <section class="card chat-card">
+        <h2 class="card-title">💬 Chat with Amy</h2>
+        <div class="chat-messages" id="chatMessages">
+          <div class="chat-placeholder">
+            <svg width="40" height="40" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round">
+              <path d="M21 15a2 2 0 01-2 2H7l-4 4V5a2 2 0 012-2h14a2 2 0 012 2z"/>
+            </svg>
+            <p>Upload a file, then ask me anything!</p>
+          </div>
+        </div>
+        <form class="chat-input-area" id="chatForm">
+          <input type="text" id="chatInput" class="chat-input" placeholder="Ask about your data…" disabled autocomplete="off" />
+          <button type="submit" class="btn btn-send" id="chatSendBtn" disabled>
+            <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+              <line x1="22" y1="2" x2="11" y2="13"/><polygon points="22 2 15 22 11 13 2 9 22 2"/>
+            </svg>
+          </button>
+        </form>
+      </section>
+    </aside>
+
+  </main>
+
+  <div class="loading-overlay" id="loadingOverlay" style="display:none;">
+    <div class="spinner"></div><p id="loadingText">Processing…</p>
+  </div>
+
+  <script src="/app.js"></script>
+</body>
+</html>
